@@ -1,4 +1,3 @@
-using CK.CodeGen;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -18,10 +17,9 @@ namespace Kuinox.TokenizerGenerator
             Simple,
             Greedy
         }
-        class TokenDefinition
+        public class TokenDefinition
         {
             public string Value { get; }
-            public Node? SubTree { get; }
             public TokenType Type { get; }
 
             public TokenDefinition( string token )
@@ -30,23 +28,16 @@ namespace Kuinox.TokenizerGenerator
                 Value = token;
                 Type = TokenType.Simple;
             }
-
-            public TokenDefinition( string token, Node subTree )
-            {
-                Value = token;
-                SubTree = subTree;
-                Type = TokenType.Greedy;
-            }
         }
 
-        class Node
+        public class Node
         {
             public readonly char Value;
             readonly Dictionary<char, Node> _subNodes = new();
             public TokenDefinition? TokenDefinition { get; private set; }
             public int Depth { get; }
-
-            public Node( int depth, char value )
+            public int TokenId { get; }
+            public Node( int depth, char value, int tokenId )
             {
                 Depth = depth;
                 Value = value;
@@ -56,6 +47,7 @@ namespace Kuinox.TokenizerGenerator
 
             public IEnumerable<Node> AllSubNodes => _subNodes.Values.SelectMany( s => s.AllSubNodes ).Concat( _subNodes.Values );
 
+            int _id = 0;
             public void AddToken( TokenDefinition tokenDefinition, ReadOnlySpan<char> slice )
             {
                 if( slice.Length == 1 )
@@ -74,7 +66,7 @@ namespace Kuinox.TokenizerGenerator
                 }
                 else
                 {
-                    _subNodes.Add( next, new Node( Depth + 1, next ) );
+                    _subNodes.Add( next, new Node( Depth + 1, next, _id++ ) );
                 }
             }
 
